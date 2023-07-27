@@ -25,10 +25,10 @@ const unknownEndpoint = (_, response) => {
 const errorHandlerMiddleWare = function (error, request, response, next) {
     console.log(error);
 
-    if ( error.name === "CastError" ) {
-        response.status(400).end();
-        return ;
-    }
+    if ( error.name === "CastError" )
+        return response.status(400).end();
+    else if (error.name === 'ValidationError')
+        return response.status(400).json({ error: error.message })
 
     next(error);
 };
@@ -146,7 +146,7 @@ app.get('/info', (_, response, next) => {
 
             response.send(res);
         })
-        .catch(error => next(err));
+        .catch(err => next(err));
 });
 
 /**
@@ -168,7 +168,7 @@ app.get('/api/persons/:id', (request, response, next) => {
             else
                 response.status(404).end();
         })
-        .catch(error => next(error));
+        .catch(err => next(err));
 });
 
 /**
@@ -258,13 +258,8 @@ app.put('/api/persons/:id', (request, response, next) => {
         number: body.number
     };
 
-    if (!person.name && !person.number) {
-        const error = !person.name ? 'name' : 'number'
-        return response.status(400).json({ error : `${error} property is missing`});
-    }
-
     Persons
-        .findByIdAndUpdate(id, person, { new: true })
+        .findByIdAndUpdate(id, person, { new: true, runValidators: true, context: 'query' })
         .then(updatedPerson => {
             if (updatedPerson)
                 response.status(200).json(updatedPerson);

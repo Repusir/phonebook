@@ -14,9 +14,36 @@ mongoose.connect(uri)
     })
 ;
 
+/**
+ * 3.19*: Phonebook database, step7
+ * Expand the validation so that the name stored in the database has to be at least three characters long.
+ * 
+ * 3.20*: Phonebook database, step8
+ * Add validation to your phonebook application, which will make sure that phone numbers are of the correct form. A phone number must:
+ * 
+ * - have length of 8 or more
+ * - be formed of two parts that are separated by -, the first part has two or three numbers and the second part also consists of numbers
+ * 
+ * eg. 09-1234556 and 040-22334455 are valid phone numbers
+ * eg. 1234556, 1-22334455 and 10-22-334455 are invalid
+ */
+
 const personSchema = new mongoose.Schema({
-    name: String,
-    number: String
+    name: {
+        type: String,
+        minLength: 3,
+        required: [true, `Name is required`]
+    },
+    number: {
+        type: String,
+        validate: {
+            validator: function(v) {
+                return /^(\d{2}-\d{6,})|(\d{3}-\d{5,})$/.test(v)
+            },
+            message: props => `${props.value} is not a valid phone number!`
+        },
+        required: [true, `Number is required`]
+    }
 });
 
 personSchema.set('toJSON', {
